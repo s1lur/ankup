@@ -1,0 +1,57 @@
+volumes:
+  db_data: {}
+
+services:
+  backend:
+    build: ./backend
+    depends_on:
+      postgres: &healthy-dependency
+        condition: service_healthy
+      redis: *healthy-dependency
+    command: /app/scripts/dev.sh
+    restart: on-failure
+    env_file: &backend-env-files
+      - .env/pg
+      - .env/back
+      - .env/redis
+    ports:
+      - '8000:8000'
+
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - .env/pg
+    ports:
+      - '5432:5432'
+    user: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  celery:
+    build: ./backend
+    command: /app/scripts/start_celery.sh
+    env_file: *backend-env-files
+    environment:
+      - CELERY_WORKER_COUNT=1
+    depends_on:
+      backend:
+        condition: service_started
+      redis: *healthy-dependency
+
+  redis:
+    image: 'redis:8-alpine'
+    env_file:
+      - .env/redis
+    ports:
+      - '6379:6379'
+    command: /bin/sh -c "redis-server --requirepass $${REDIS_PASSWORD}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      retries: 5
+      interval: 10s
+      timeout: 2s

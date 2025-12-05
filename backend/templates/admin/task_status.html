@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <ul style="padding-left: 24px;">
+    <li><b>ID задачи:</b> {{ task.id }}</li>
+    <li><b>Название задачи:</b> {{ task.name }}</li>
+    <li><b>Состояние:</b> {{ task.state }}</li>
+    {% if task.state == "SUCCESS" or task.state == "FAILURE" %}
+      <li><b>Результат:</b> {{ task.result }}</li>
+    {% endif %}
+  </ul>
+  {% if task.state == "PENDING" or task.state == "STARTED" %}
+    <hr style="margin: 12px 0;">
+    <div>
+      <p>Задача выполняется...</p>
+      {% include "admin/components/spinner.html" %}
+      <p>(Время последнего обновления: <span id="lastUpdate"></span>)</p>
+    </div>
+    <script>
+      let intervalId = null;
+      const lastUpdateSpan = document.getElementById("lastUpdate");
+
+      async function fetchStatusAndUpdate() {
+        try {
+          console.log("Fetching task status...");
+
+          const response = await fetch(`/admin/task-status/{{ task.id }}/`, {
+            headers: { Accept: "application/json" }
+          });
+          const data = await response.json();
+
+          if (data["state"] === "SUCCESS" || data["state"] === "FAILURE") {
+            if (intervalId) {
+              clearInterval(intervalId);
+            }
+            window.reload();
+          }
+
+          lastUpdateSpan.innerHTML = new Date().toLocaleTimeString();
+        } catch (error) {
+          console.error("Error fetching task status:", error);
+        }
+      }
+
+      intervalId = setInterval(fetchStatusAndUpdate, 3000);
+      fetchStatusAndUpdate();
+    </script>
+  {% endif %}
+{% endblock %}
