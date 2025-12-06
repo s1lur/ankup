@@ -27,7 +27,7 @@ class SaltClient:
             response = self.session.post(
                 f"{self.base_url}/login",
                 json=payload,
-                verify=settings.SALT_VERIFY_SSL,
+                verify=False,
                 timeout=10
             )
             response.raise_for_status()
@@ -77,7 +77,7 @@ class SaltClient:
         while time.time() - start_time < timeout:
             response = self.session.get(
                 f"{self.base_url}/jobs/{jid}",
-                verify=settings.SALT_VERIFY_SSL
+                verify=False,
             )
 
             if response.status_code == 200:

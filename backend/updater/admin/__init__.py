@@ -1,5 +1,5 @@
 from .device import DeviceAdmin
-from .component import ComponentAdmin
-from .state import CurrentStateAdmin, TargetStateAdmin
-from .update import UpdateAdmin
+from .components import ConfigTemplateAdmin, PackageAdmin, ServiceAdmin
+from .connections import DevicePackageAdmin, DeviceServiceAdmin
+from .update import PackageUpdateAdmin, DistUpgradeAdmin, ServiceUpdateAdmin
 from .version import VersionAdmin

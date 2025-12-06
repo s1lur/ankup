@@ -3,7 +3,6 @@
 {% block content %}
   <ul style="padding-left: 24px;">
     <li><b>ID задачи:</b> {{ task.id }}</li>
-    <li><b>Название задачи:</b> {{ task.name }}</li>
     <li><b>Состояние:</b> {{ task.state }}</li>
     {% if task.state == "SUCCESS" or task.state == "FAILURE" %}
       <li><b>Результат:</b> {{ task.result }}</li>

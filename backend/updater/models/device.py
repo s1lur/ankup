@@ -8,7 +8,8 @@ class Device(models.Model):
         db_table = 'device'
 
     name = models.CharField(max_length=250, unique=True, verbose_name='Название')
-    components = models.ManyToManyField('updater.Component', related_name='devices', db_table='device_components', verbose_name='Компоненты')
+    packages = models.ManyToManyField('updater.Package', related_name='devices', through='updater.DevicePackage', blank=True, verbose_name='Пакеты')
+    services = models.ManyToManyField('updater.Service', related_name='devices', through='updater.DeviceService', blank=True, verbose_name='Сервисы')
 
     def __str__(self):
         return f'{self.name}'

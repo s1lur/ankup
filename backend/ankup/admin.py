@@ -26,7 +26,6 @@ class CustomAdminSite(admin.AdminSite):
         task = AsyncResult(task_id)
         task_data = {
             "id": task.id,
-            "name": task.name,
             "state": task.state,
             "result": task.result,
         }

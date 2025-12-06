@@ -1,0 +1,169 @@
+from django.contrib import admin
+from django.db import models
+from django.urls import reverse
+from django.utils.html import format_html, urlencode
+from django_json_widget.widgets import JSONEditorWidget
+from simple_history.admin import SimpleHistoryAdmin
+
+from updater.models import (
+    Package, ConfigTemplate, Service
+)
+
+
+class ConfigTemplateInline(admin.TabularInline):
+    model = ConfigTemplate
+    extra = 1
+    formfield_overrides = {
+        models.JSONField: {'widget': JSONEditorWidget},
+    }
+
+@admin.register(Package)
+class PackageAdmin(admin.ModelAdmin):
+    model = Package
+    inlines = [
+        ConfigTemplateInline
+    ]
+    list_display = [
+        'id',
+        'name',
+        'view_devices_link',
+        'view_all_versions_link',
+        'view_config_templates_link',
+        'view_services_link',
+        'view_dependencies_link',
+        'view_dependant_packages_link',
+    ]
+    list_display_links = [
+        'id',
+    ]
+    search_fields = [
+        'id',
+        'name',
+    ]
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ['name']
+        return []
+
+    def view_devices_link(self, obj):
+        count = obj.devices.count()
+        url = reverse('admin:updater_device_changelist') + '?' + urlencode({'packages__id': obj.id})
+        return format_html(f'<a href="{{}}"> {{}} устройств{"о" if count == 1 else "а" if 2 <= count <= 4 else ""} </a>', url, count)
+    view_devices_link.short_description = 'Устройства'
+
+    def view_all_versions_link(self, obj):
+        count = obj.versions.count()
+        url = reverse('admin:updater_version_changelist') + '?' + urlencode({'package_id': obj.id})
+        return format_html(
+            f'<a href="{{}}"> {{}} верси{"я" if count == 1 else "и" if 2 <= count <= 4 else "й"} </a>', url, count)
+    view_all_versions_link.short_description = 'Доступные версии'
+
+    def view_config_templates_link(self, obj):
+        count = obj.configs.count()
+        url = reverse('admin:updater_configtemplate_changelist') + '?' + urlencode({'packages__id': obj.id})
+        return format_html(f'<a href="{{}}"> {{}} шаблон{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} конфиг{"а" if count == 1 else "ов"} </a>', url, count)
+    view_config_templates_link.short_description = 'Шаблоны конфигов'
+
+    def view_services_link(self, obj):
+        count = obj.services.count()
+        url = reverse('admin:updater_service_changelist') + '?' + urlencode({'package_deps__id': obj.id})
+        return format_html(f'<a href="{{}}"> {{}} сервис{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>', url, count)
+    view_services_link.short_description = 'Сервисы'
+
+    def view_dependencies_link(self, obj):
+        count = obj.dependencies.count()
+        url = reverse('admin:updater_package_changelist') + '?' + urlencode({'dependant_packages__id': obj.id})
+        return format_html(f'<a href="{{}}"> {{}} пакет{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>', url, count)
+    view_dependencies_link.short_description = 'Пакеты-зависимости'
+
+    def view_dependant_packages_link(self, obj):
+        count = obj.dependant_packages.count()
+        url = reverse('admin:updater_package_changelist') + '?' + urlencode({'dependencies__id': obj.id})
+        return format_html(f'<a href="{{}}"> {{}} пакет{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>', url, count)
+    view_dependant_packages_link.short_description = 'Зависимые пакеты'
+
+
+@admin.register(ConfigTemplate)
+class ConfigTemplateAdmin(SimpleHistoryAdmin):
+    model = ConfigTemplate
+    list_display = [
+        'id',
+        'name',
+        'file',
+        'dest_path',
+        'file_mode',
+        'parameters',
+        'view_package_link',
+    ]
+    list_display_links = [
+        'id',
+    ]
+    search_fields = [
+        'name',
+    ]
+    autocomplete_fields = [
+        'package'
+    ]
+    formfield_overrides = {
+        models.JSONField: {'widget': JSONEditorWidget},
+    }
+
+    def view_package_link(self, obj):
+        url = reverse("admin:updater_package_change", args=[obj.package_id])
+        return format_html('<a href="{}">{}</a>', url, obj.package)
+    view_package_link.short_description = 'Пакет'
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    model = Service
+    list_display = [
+        'id',
+        'name',
+        'view_service_deps_link',
+        'view_dependant_services_link',
+        'view_package_deps_link',
+        'view_devices_link',
+    ]
+    list_display_links = [
+        'id',
+    ]
+    search_fields = [
+        'name',
+    ]
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ['name']
+        return []
+
+    def view_service_deps_link(self, obj):
+        count = obj.service_deps.count()
+        url = reverse('admin:updater_service_changelist') + '?' + urlencode({'dependant_services__id': obj.id})
+        return format_html(
+            f'<a href="{{}}"> {{}} сервис{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>',
+            url, count)
+    view_service_deps_link.short_description = 'Сервисы, от которых зависит'
+
+    def view_dependant_services_link(self, obj):
+        count = obj.dependant_services.count()
+        url = reverse('admin:updater_service_changelist') + '?' + urlencode({'service_deps__id': obj.id})
+        return format_html(
+            f'<a href="{{}}"> {{}} сервис{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>',
+            url, count)
+    view_dependant_services_link.short_description = 'Зависимые сервисы'
+
+    def view_package_deps_link(self, obj):
+        count = obj.package_deps.count()
+        url = reverse('admin:updater_package_changelist') + '?' + urlencode({'services__id': obj.id})
+        return format_html(
+            f'<a href="{{}}"> {{}} пакет{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>',
+            url, count)
+    view_package_deps_link.short_description = 'Пакеты, от которых зависит'
+
+    def view_devices_link(self, obj):
+        count = obj.devices.count()
+        url = reverse('admin:updater_device_changelist') + '?' + urlencode({'services__id': obj.id})
+        return format_html(f'<a href="{{}}"> {{}} устройств{"о" if count == 1 else "а" if 2 <= count <= 4 else ""} </a>', url, count)
+    view_devices_link.short_description = 'Устройства'

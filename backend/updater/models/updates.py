@@ -1,5 +1,6 @@
 from django.db import models
 from updater.choices import TaskStatus
+from updater.models import DevicePackage, DeviceService
 
 
 class Task(models.Model):
@@ -14,17 +15,39 @@ class Task(models.Model):
     author = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, verbose_name='Автор')
 
 
-class Update(Task):
-    class Meta:
-        verbose_name = 'Обновление'
-        verbose_name_plural = 'Обновления'
-        db_table = 'update'
+class PackageUpdate(Task):
+    _salt_task_name = 'package_update'
+    _connection_model = DevicePackage
 
-    version = models.ForeignKey('updater.Version', related_name='updates', on_delete=models.CASCADE, verbose_name='Версия')
+    class Meta:
+        verbose_name = 'Обновление пакетов'
+        verbose_name_plural = 'Обновления пакетов'
+        db_table = 'component_update'
+
+    def __str__(self):
+        return f'package update {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
 
 
 class DistUpgrade(Task):
+    _salt_task_name = 'dist_upgrade'
+
     class Meta:
         verbose_name = 'Задача выполнения dist-upgrade'
         verbose_name_plural = 'Задачи выполнения dist-upgrade'
         db_table = 'dist_upgrade'
+
+    def __str__(self):
+        return f'dist-upgrade {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
+
+
+class ServiceUpdate(Task):
+    _salt_task_name = 'service_update'
+    _connection_model = DeviceService
+
+    class Meta:
+        verbose_name = 'Обновление сервисов на устройстве'
+        verbose_name_plural = 'Обновления сервисов на устройствах'
+        db_table = 'service_update'
+
+    def __str__(self):
+        return f'service update {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
