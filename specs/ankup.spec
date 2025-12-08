@@ -1,6 +1,5 @@
 %define _python_compile_include /dev/null
 %define __python /bin/true
-%add_python_req_skip_all
 
 Name:           ankup
 Version:        1.0.0
