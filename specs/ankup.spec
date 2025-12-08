@@ -22,7 +22,6 @@ Requires:       python3-module-wheel
 
 %set_verify_elf_method skip
 
-%define __python /usr/bin/python3
 %add_python_compile_exclude /opt/%{name}
 %add_python3_compile_exclude /opt/%{name}
 
