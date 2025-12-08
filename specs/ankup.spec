@@ -18,8 +18,6 @@ Requires:       python3
 
 %set_verify_elf_method skip
 
-%add_findreq_skiplist /opt/%{name}/*
-
 %description
 Monolithic package containing Django Backend, Celery Worker, and Celery Beat.
 Includes all Python dependencies as wheels for offline installation.
@@ -60,9 +58,9 @@ fi
 
 echo "Installing dependencies from local wheelhouse..."
 
-/opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels --upgrade pip setuptools wheel
+a= /opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels --upgrade pip setuptools wheel
 
-/opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels -r /opt/%{name}/requirements.txt
+a= /opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels -r /opt/%{name}/requirements.txt
 
 chown -R ankup_user:ankup_user /opt/%{name}
 chown -R ankup_user:ankup_user /var/log/%{name}
