@@ -1,0 +1,17 @@
+[Unit]
+Description=Ankup task queue
+After=network.target redis.service ankup-core.service
+
+[Service]
+User=ankup_user
+Group=ankup_user
+WorkingDirectory=/opt/ankup-core
+EnvironmentFile=/etc/sysconfig/ankup-core
+
+ExecStart=/opt/ankup-core/venv/bin/celery -A core worker -l info --logfile=/var/log/ankup-core/celery.log
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

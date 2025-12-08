@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 WSGI config for ankup project.
 
