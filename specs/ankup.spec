@@ -1,5 +1,5 @@
-%add_findreq_skiplist /opt/ankup
-%add_python_compile_exclude /opt/ankup
+%add_findreq_skiplist /opt/ankup/*
+%add_python_compile_exclude /opt/ankup/*
 
 Name:           ankup
 Version:        1.0.0
@@ -9,6 +9,7 @@ License:        Proprietary
 Group:          Networking/Other
 BuildArch:      noarch
 Url:            http://internal.repo
+AutoReqProv:    no
 
 Source0:        %{name}-%{version}.tar.gz
 
