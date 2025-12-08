@@ -1,5 +1,3 @@
-%add_findreq_skiplist /opt/ankup
-
 Name:           ankup
 Version:        1.0.0
 Release:        alt1
@@ -19,6 +17,8 @@ Source3:        ankup-celery-beat.service
 Requires:       python3
 
 %set_verify_elf_method skip
+
+%add_findreq_skiplist /opt/%{name}/*
 
 %description
 Monolithic package containing Django Backend, Celery Worker, and Celery Beat.
