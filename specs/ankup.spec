@@ -1,3 +1,7 @@
+%define _python_compile_include /dev/null
+%define __python /bin/true
+%add_python_req_skip_all
+
 Name:           ankup
 Version:        1.0.0
 Release:        alt1
@@ -21,9 +25,6 @@ Requires:       python3-module-wheel
 %add_findreq_skiplist /opt/%{name}
 
 %set_verify_elf_method skip
-
-%add_python_compile_exclude /opt/%{name}
-%add_python3_compile_exclude /opt/%{name}
 
 %description
 Monolithic package containing Django Backend, Celery Worker, and Celery Beat.
