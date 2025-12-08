@@ -53,6 +53,8 @@ class DeviceAdmin(admin.ModelAdmin):
     list_display = [
         'id',
         'name',
+        'is_available',
+        'last_seen',
         'view_packages_link',
         'view_services_link',
         'view_device_packages_link',
@@ -65,6 +67,10 @@ class DeviceAdmin(admin.ModelAdmin):
     search_fields = [
         'id',
         'name',
+    ]
+    readonly_fields = [
+        'is_available',
+        'last_seen',
     ]
     actions = ['run_package_update', 'run_dist_upgrade', 'run_service_update']
     inlines = [

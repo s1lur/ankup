@@ -1,3 +1,3 @@
 from .update import schedule_update
-from .connections import validate_package_cycles, validate_service_cycles, validate_device_package
+from .connections import validate_package_cycles, validate_service_cycles
 from .config import check_config_template_file_change, save_config_template_old_file_hash

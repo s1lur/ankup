@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # 3rd party
     'django_json_widget',
     'simple_history',
+    'django_celery_beat',
 
     # local
     'updater.apps.UpdaterConfig',
@@ -115,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -151,8 +152,17 @@ REDIS = {
 CELERY_BROKER_URL = f"redis://{REDIS['USER']}:{REDIS['PASSWORD']}@{REDIS['HOST']}:{REDIS['PORT']}/{REDIS['DB_NUMBER']}"
 CELERY_RESULT_BACKEND = f"db+postgresql://{DATABASES['default']['USER']}:{DATABASES['default']['PASSWORD']}@{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}/{DATABASES['default']['NAME']}"
 
+
+CELERY_BEAT_SCHEDULE = {
+    'ping-devices-every-5-min': {
+        'task': 'updater.celery.device.update_devices_availability',
+        'schedule': 300.0,
+    },
+}
+
 # salt
 
 SALT_API_URL = os.getenv('SALT_API_URL', 'http://127.0.0.1:8001')
 SALT_API_USER = os.getenv('SALT_API_USER', 'django_salt')
 SALT_API_PASSWORD = os.getenv('SALT_API_PASSWORD', 'django_salt')
+

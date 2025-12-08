@@ -71,6 +71,18 @@ class SaltClient:
         data = response.json()
         return data['return'][0]['jid']
 
+    def ping_minions(self, target='*'):
+        if isinstance(target, list):
+            tgt_arg = ','.join(target)
+            tgt_type = 'list'
+        else:
+            tgt_arg = target
+            tgt_type = 'glob'
+
+        result = self.run_sync(tgt=tgt_arg, fun='test.ping', tgt_type=tgt_type)
+
+        return result.get('return', [{}])[0]
+
     def wait_for_job(self, jid, timeout=600, sleep_interval=5):
         start_time = time.time()
 
