@@ -1,5 +1,4 @@
-%add_findreq_skiplist /opt/ankup/*
-%add_python_compile_exclude /opt/ankup/*
+%add_findreq_skiplist /opt/ankup
 
 Name:           ankup
 Version:        1.0.0
