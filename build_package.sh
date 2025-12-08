@@ -1,3 +1,5 @@
+set -x
+
 mkdir -p RPM/{RPMS,SPECS,SOURCES}
 
 tar --transform 's,^backend,ankup-1.0.0,' --exclude='Dockerfile' --exclude='requirements.txt' -czf ankup-1.0.0.tar.gz backend/
