@@ -1,6 +1,6 @@
 %define _python_compile_include /dev/null
 %define __python /bin/true
-%add_findreq_skiplist
+%add_findreq_skiplist /opt/%{name}/*
 
 Name:           ankup
 Version:        1.0.0
