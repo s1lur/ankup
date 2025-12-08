@@ -1,6 +1,5 @@
-%define _python_compile_include /dev/null
-%define __python /bin/true
-%add_findreq_skiplist /opt/%{name}/*
+%add_findreq_skiplist /opt/ankup
+%add_python_compile_exclude /opt/ankup
 
 Name:           ankup
 Version:        1.0.0
@@ -10,7 +9,6 @@ License:        Proprietary
 Group:          Networking/Other
 BuildArch:      noarch
 Url:            http://internal.repo
-AutoReqProv:    no
 
 Source0:        %{name}-%{version}.tar.gz
 
