@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     # 3rd party
     'django_json_widget',
     'simple_history',
-    'django_celery_beat',
 
     # local
     'updater.apps.UpdaterConfig',

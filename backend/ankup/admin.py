@@ -11,6 +11,8 @@ class CustomAdminConfig(AdminConfig):
 
 
 class CustomAdminSite(admin.AdminSite):
+    site_header = 'Система автоматизированного обновления АС «Анклав»'
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
