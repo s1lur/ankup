@@ -12,39 +12,44 @@ from updater.models import (
 from .connections import DevicePackageFormSet, DeviceServiceFormSet
 
 
+class DevicePackageInlineForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['package'].disabled = True
+
+
+class DeviceServiceInlineForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['service'].disabled = True
+
 
 class DevicePackageInline(admin.TabularInline):
     model = DevicePackage
+    form = DevicePackageInlineForm
     formset = DevicePackageFormSet
     autocomplete_fields = [
         'package',
         'version',
     ]
-    extra = 1
     formfield_overrides = {
         models.JSONField: {'widget': JSONEditorWidget},
     }
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = ['applied']
-        if obj:
-            fields += ['package']
-        return fields
+    readonly_fields = ['applied']
+    extra = 1
 
 
 class DeviceServiceInline(admin.TabularInline):
     model = DeviceService
+    form = DeviceServiceInlineForm
     formset = DeviceServiceFormSet
     autocomplete_fields = [
         'service',
     ]
+    readonly_fields = ['applied']
     extra = 1
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = ['applied']
-        if obj:
-            fields += ['service']
-        return fields
 
 
 @admin.register(Device)

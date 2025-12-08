@@ -22,9 +22,9 @@ class VersionAdmin(admin.ModelAdmin):
         'package__name',
     ]
 
-    def get_readonly_fields(self, obj):
+    def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ['package']
+            return ['package', 'number']
         return []
 
     def view_package_link(self, obj):
