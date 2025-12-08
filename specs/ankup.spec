@@ -9,6 +9,7 @@ License:        Proprietary
 Group:          Networking/Other
 BuildArch:      noarch
 Url:            http://internal.repo
+AutoReqProv:    no
 
 Source0:        %{name}-%{version}.tar.gz
 
@@ -17,9 +18,6 @@ Source2:        ankup-celery.service
 Source3:        ankup-celery-beat.service
 
 Requires:       python3
-Requires:       python3-module-pip
-Requires:       python3-module-setuptools
-Requires:       python3-module-wheel
 
 %add_findreq_skiplist /opt/%{name}
 
