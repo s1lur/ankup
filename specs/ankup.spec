@@ -1,5 +1,6 @@
 %define _python_compile_include /dev/null
 %define __python /bin/true
+%add_findreq_skiplist
 
 Name:           ankup
 Version:        1.0.0
@@ -18,8 +19,6 @@ Source2:        ankup-celery.service
 Source3:        ankup-celery-beat.service
 
 Requires:       python3
-
-%add_findreq_skiplist /opt/%{name}
 
 %set_verify_elf_method skip
 
