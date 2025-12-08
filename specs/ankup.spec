@@ -18,12 +18,13 @@ Requires:       python3-module-pip
 Requires:       python3-module-setuptools
 Requires:       python3-module-wheel
 
-%add_findreq_skiplist /opt/%{name}/*
+%add_findreq_skiplist /opt/%{name}
 
 %set_verify_elf_method skip
 
 %define __python /usr/bin/python3
-%add_python_compile_exclude /opt/%{name}/*
+%add_python_compile_exclude /opt/%{name}
+%add_python3_compile_exclude /opt/%{name}
 
 %description
 Monolithic package containing Django Backend, Celery Worker, and Celery Beat.
