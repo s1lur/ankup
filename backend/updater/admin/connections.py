@@ -1,5 +1,4 @@
 from django.db import models
-from django import forms
 from django.forms.models import BaseInlineFormSet
 from django.contrib import admin
 from django.urls import reverse
@@ -8,8 +7,7 @@ from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
 
 from updater.models import (
-    DevicePackage, DeviceService, Version, Package, Service,
-    HistoricalDevicePackage, HistoricalDeviceService,
+    DevicePackage, DeviceService, Package, Service,
 )
 
 
@@ -18,50 +16,65 @@ class DevicePackageFormSet(BaseInlineFormSet):
         super().clean()
         if any(self.errors): return
 
-        existing_ids = set()
         if self.instance.pk:
-            existing_ids = set(
+            installed_map = dict(
                 DevicePackage.objects.filter(device=self.instance)
-                .values_list('package_id', flat=True)
+                .values_list('package_id', 'version_id')
             )
-
-        added_ids = set()
-        removed_ids = set()
+        else:
+            installed_map = {}
 
         for form in self.forms:
             if not form.cleaned_data: continue
+
             pkg = form.cleaned_data.get('package')
             ver = form.cleaned_data.get('version')
-
-            if not pkg: continue
-
-            if ver and ver.package_id != pkg.id:
-                form.add_error(
-                    'version',
-                    f"Эта версия принадлежит пакету '{ver.package.name}', а выбран '{pkg.name}'."
-                )
-
             is_delete = form.cleaned_data.get('DELETE')
 
-            if is_delete:
-                if form.instance.pk: removed_ids.add(pkg.id)
-            else:
-                added_ids.add(pkg.id)
-
-        final_package_ids = (existing_ids - removed_ids) | added_ids
+            if pkg:
+                if is_delete:
+                    installed_map.pop(pkg.id, None)
+                else:
+                    installed_map[pkg.id] = ver.id if ver else None
 
         for form in self.forms:
             if not form.cleaned_data or form.cleaned_data.get('DELETE'): continue
 
-            pkg = form.cleaned_data.get('package')
-            if not pkg: continue
+            current_pkg = form.cleaned_data.get('package')
+            if not current_pkg: continue
 
-            required_ids = set(pkg.dependencies.values_list('id', flat=True))
-            missing = required_ids - final_package_ids
+            dependencies = current_pkg.package_deps_through.all().prefetch_related('versions')
 
-            if missing:
-                names = Package.objects.filter(id__in=missing).values_list('name', flat=True)
-                form.add_error('package', f"Отсутствуют зависимости: {', '.join(names)}")
+            for dep_link in dependencies:
+                required_pkg = dep_link.dependency
+                allowed_versions = dep_link.versions.all()
+                allowed_ver_ids = set(v.id for v in allowed_versions)
+
+                if required_pkg.id not in installed_map:
+                    form.add_error(
+                        'package',
+                        f"Отсутствует зависимость: пакет '{required_pkg.name}'."
+                    )
+                    continue
+
+                if allowed_ver_ids:
+                    installed_ver_id = installed_map[required_pkg.id]
+
+                    if installed_ver_id is None:
+                        allowed_strs = ", ".join([str(v.number) for v in allowed_versions])
+                        form.add_error(
+                            'package',
+                            f"Для '{required_pkg.name}' требуется одна из версий: [{allowed_strs}], "
+                            f"но версия не выбрана."
+                        )
+                    elif installed_ver_id not in allowed_ver_ids:
+                        allowed_strs = ", ".join([str(v.number) for v in allowed_versions])
+
+                        form.add_error(
+                            'package',
+                            f"Неверная версия зависимости '{required_pkg.name}'. "
+                            f"Требуется: [{allowed_strs}]."
+                        )
 
 
 class DeviceServiceFormSet(BaseInlineFormSet):
@@ -69,46 +82,46 @@ class DeviceServiceFormSet(BaseInlineFormSet):
         super().clean()
         if any(self.errors): return
 
-        existing_svc_ids = set()
-        if self.instance.pk:
-            existing_svc_ids = set(
-                DeviceService.objects.filter(device=self.instance).values_list('service_id', flat=True))
+        device = self.instance
 
-        added_svc_ids = set()
-        removed_svc_ids = set()
-
-        for form in self.forms:
-            if not form.cleaned_data: continue
-            svc = form.cleaned_data.get('service')
-            if form.cleaned_data.get('DELETE'):
-                if form.instance.pk and svc: removed_svc_ids.add(svc.id)
-            elif svc:
-                added_svc_ids.add(svc.id)
-
-        final_service_ids = (existing_svc_ids - removed_svc_ids) | added_svc_ids
-
-        installed_package_ids = set()
-        if self.instance.pk:
-            installed_package_ids = set(
-                DevicePackage.objects.filter(device=self.instance).values_list('package_id', flat=True))
+        if not device.pk:
+            installed_pkg_map = {}
+        else:
+            installed_pkg_map = dict(
+                DevicePackage.objects.filter(device=device)
+                .values_list('package_id', 'version_id')
+            )
 
         for form in self.forms:
             if not form.cleaned_data or form.cleaned_data.get('DELETE'): continue
-            svc = form.cleaned_data.get('service')
-            if not svc: continue
 
-            req_pkg = set(svc.package_deps.values_list('id', flat=True))
-            missing_pkg = req_pkg - installed_package_ids
-            if missing_pkg:
-                names = Package.objects.filter(id__in=missing_pkg).values_list('name', flat=True)
-                form.add_error('service',
-                               f"Требуются пакеты: {', '.join(names)}. (Сохраните пакеты перед добавлением сервиса)")
+            service = form.cleaned_data.get('service')
+            if not service: continue
 
-            req_svc = set(svc.service_deps.values_list('id', flat=True))
-            missing_svc = req_svc - final_service_ids
-            if missing_svc:
-                names = Service.objects.filter(id__in=missing_svc).values_list('name', flat=True)
-                form.add_error('service', f"Требуются сервисы: {', '.join(names)}")
+            dependencies = service.package_deps_through.all().prefetch_related('versions')
+
+            for dep_link in dependencies:
+                required_pkg = dep_link.dependency
+                allowed_versions = dep_link.versions.all()
+                allowed_ver_ids = set(v.id for v in allowed_versions)
+
+                if required_pkg.id not in installed_pkg_map:
+                    form.add_error(
+                        'service',
+                        f"Сервис требует пакет '{required_pkg.name}', который не установлен."
+                    )
+                    continue
+
+                if allowed_ver_ids:
+                    installed_ver_id = installed_pkg_map[required_pkg.id]
+
+                    if installed_ver_id not in allowed_ver_ids:
+                        allowed_strs = ", ".join([str(v.number) for v in allowed_versions])
+                        form.add_error(
+                            'service',
+                            f"Сервис требует пакет '{required_pkg.name}' одной из версий: [{allowed_strs}]. "
+                            f"Проверьте установленную версию."
+                        )
 
 
 @admin.register(DevicePackage)

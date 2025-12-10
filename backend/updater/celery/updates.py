@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 def execute_update(model_name, instance_id, timeout=600):
     model = apps.get_model('updater', model_name)
     instance = model.objects.get(pk=instance_id)
-    connections = instance._connection_model.objects.filter(applied=False).select_for_update()
+    connections = None
+    if instance._connection_model:
+        connections = instance._connection_model.objects.filter(applied=False).select_for_update()
 
     instance.status = TaskStatus.PROCESSING
     instance.save(update_fields=('status',))
@@ -32,9 +34,10 @@ def execute_update(model_name, instance_id, timeout=600):
         with transaction.atomic():
             instance.status = TaskStatus.SUCCESS
             instance.save(update_fields=('status',))
-            for connection in connections:
-                connection.applied = True
-                connection.save(update_fields=('applied',))
+            if connections:
+                for connection in connections:
+                    connection.applied = True
+                    connection.save(update_fields=('applied',))
 
         return results
     except TimeoutError:

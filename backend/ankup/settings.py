@@ -157,6 +157,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'updater.celery.device.update_devices_availability',
         'schedule': 300.0,
     },
+    'check-devices-antivirus-updates': {
+        'task': 'updater.celery.device.check_device_antivirus_updates',
+        'schedule': 60.0,
+    },
 }
 
 # salt

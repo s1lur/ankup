@@ -7,6 +7,8 @@ class Task(models.Model):
     class Meta:
         abstract = True
 
+    _connection_model = None
+
     device = models.ForeignKey('updater.Device', related_name='%(class)ss', on_delete=models.CASCADE,
                                verbose_name='Устройство')
     status = models.CharField(max_length=50, choices=TaskStatus.choices, default=TaskStatus.REQUESTED, verbose_name='Состояние')
@@ -51,3 +53,15 @@ class ServiceUpdate(Task):
 
     def __str__(self):
         return f'service update {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
+
+
+class AntivirusUpdate(Task):
+    _salt_task_name = 'antivirus_update'
+
+    class Meta:
+        verbose_name = 'Обновление баз сигнатур антивируса на устройстве'
+        verbose_name_plural = 'Обновления баз сигнатур антивирусов на устройствах'
+        db_table = 'antivirus_update'
+
+    def __str__(self):
+        return f'antivirus signature update {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}'

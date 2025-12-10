@@ -1,2 +1,2 @@
 from .updates import execute_update
-from .device import update_devices_availability
+from .device import update_devices_availability, check_device_antivirus_updates

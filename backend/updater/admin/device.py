@@ -60,6 +60,7 @@ class DeviceAdmin(admin.ModelAdmin):
         'name',
         'is_available',
         'last_seen',
+        'antivirus_schedule',
         'view_packages_link',
         'view_services_link',
         'view_device_packages_link',
@@ -82,6 +83,12 @@ class DeviceAdmin(admin.ModelAdmin):
         DevicePackageInline,
         DeviceServiceInline,
     ]
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = ['is_available', 'last_seen', 'next_run_at']
+        if obj:
+            fields += ['name']
+        return fields
 
     def view_packages_link(self, obj):
         count = obj.packages.count()

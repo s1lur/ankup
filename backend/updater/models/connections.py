@@ -2,9 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 
-from .device import Device
-from .components import Package, Service
-
 
 class DevicePackage(models.Model):
     class Meta:
