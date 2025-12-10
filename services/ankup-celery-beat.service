@@ -12,7 +12,7 @@ RuntimeDirectory=ankup
 RuntimeDirectoryMode=0755
 
 ExecStart=/opt/ankup/venv/bin/celery \
-    -A core beat \
+    -A ankup beat \
     -l info \
     --logfile=/var/log/ankup/celery-beat.log \
     --pidfile=/run/ankup/celery-beat.pid \

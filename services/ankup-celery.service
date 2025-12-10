@@ -8,7 +8,7 @@ Group=ankup_user
 WorkingDirectory=/opt/ankup
 EnvironmentFile=/etc/sysconfig/ankup
 
-ExecStart=/opt/ankup/venv/bin/celery -A core worker -l info --logfile=/var/log/ankup/celery.log
+ExecStart=/opt/ankup/venv/bin/celery -A ankup worker -l info --logfile=/var/log/ankup/celery.log
 
 Restart=always
 RestartSec=3

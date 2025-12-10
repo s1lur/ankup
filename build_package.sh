@@ -2,10 +2,10 @@ set -x
 
 mkdir -p ~/RPM/{RPMS,SPECS,SOURCES}
 
-tar --transform 's,^backend,ankup-1.0.2,' --exclude='Dockerfile' -czf ankup-1.0.2.tar.gz backend/
+tar --transform 's,^backend,ankup-1.0.3,' --exclude='Dockerfile' -czf ankup-1.0.3.tar.gz backend/
 
 cp specs/*.spec ~/RPM/SPECS/
 cp services/*.service ~/RPM/SOURCES/
-cp 'ankup-1.0.2.tar.gz' ~/RPM/SOURCES/
+cp 'ankup-1.0.3.tar.gz' ~/RPM/SOURCES/
 
 rpmbuild -bb ~/RPM/SPECS/ankup.spec
