@@ -5,24 +5,30 @@ from hashlib import sha256
 from updater.models import DevicePackage, ConfigTemplate
 
 @receiver(post_save, sender=ConfigTemplate, dispatch_uid='check_config_template_change')
-def check_config_template_change(sender, instance, **kwargs):
-    if not hasattr(instance, '_old_file_hash') and not hasattr(instance, '_old_params'):
-        return
+def check_config_template_change(sender, instance, created, **kwargs):
     objs = DevicePackage.objects.filter(package__configs__id=instance.pk).select_for_update()
 
-    if instance._old_params != instance.parameters:
+    def unapply(objs):
         for obj in objs:
             obj.applied = False
             obj.save(update_fields=('applied',))
+
+    if created:
+        unapply(objs)
+        return
+
+    if not hasattr(instance, '_old_file_hash') and not hasattr(instance, '_old_params'):
+        return
+
+    if instance._old_params != instance.parameters:
+        unapply(objs)
         return
 
     hash = sha256()
     with open(instance.file.path, 'rb') as f:
         hash.update(f.read())
     if hash.hexdigest() != instance._old_file_hash:
-        for obj in objs:
-            obj.applied = False
-            obj.save(update_fields=('applied',))
+        unapply(objs)
 
 
 @receiver(pre_save, sender=ConfigTemplate, dispatch_uid='save_config_template_old_fields')
@@ -38,19 +44,4 @@ def save_config_template_old_fields(sender, instance, **kwargs):
     finally:
         instance.file.close()
 
-@receiver(pre_save, sender=DevicePackage, dispatch_uid='save_device_package_old_fields')
-def save_device_package_old_fields(sender, instance, **kwargs):
-    if not instance.pk:
-        return
 
-    old_instance = sender.objects.get(pk=instance.pk)
-    instance._old_params = old_instance.parameters
-
-
-@receiver(pre_save, sender=DevicePackage, dispatch_uid='check_device_package_change')
-def check_device_package_change(sender, instance, **kwargs):
-    if not hasattr(instance, '_old_params'):
-        return
-    if instance._old_params != instance.parameters:
-        instance.applied = False
-        instance.save(update_fields=('applied',))

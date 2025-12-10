@@ -5,11 +5,11 @@ After=network.target postgresql.service salt-master.service
 [Service]
 User=ankup_user
 Group=ankup_user
-WorkingDirectory=/opt/ankup-core
-EnvironmentFile=/etc/sysconfig/ankup-core
+WorkingDirectory=/opt/ankup
+EnvironmentFile=/etc/sysconfig/ankup
 
-ExecStartPre=/opt/ankup-core/venv/bin/python manage.py migrate --noinput
-ExecStart=/opt/ankup-core/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 core.wsgi:application
+ExecStartPre=/opt/ankup/venv/bin/python manage.py migrate --noinput
+ExecStart=/opt/ankup/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 core.wsgi:application
 
 Restart=always
 RestartSec=3

@@ -38,10 +38,9 @@ def ext_pillar(minion_id, pillar, *args, **kwargs):
                 p.id as pid,
                 p.name as pkg_name,
                 v.number as version,
-                p.default_parameters,       -- Дефолты пакета
-                dp.parameters as overrides, -- Переопределения устройства
+                p.default_parameters,
+                dp.parameters as overrides,
 
-                -- Агрегация конфигов
                 COALESCE(
                     json_agg(json_build_object(
                         'rel_path', ct.file,

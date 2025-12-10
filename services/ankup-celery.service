@@ -5,10 +5,10 @@ After=network.target redis.service ankup-core.service
 [Service]
 User=ankup_user
 Group=ankup_user
-WorkingDirectory=/opt/ankup-core
-EnvironmentFile=/etc/sysconfig/ankup-core
+WorkingDirectory=/opt/ankup
+EnvironmentFile=/etc/sysconfig/ankup
 
-ExecStart=/opt/ankup-core/venv/bin/celery -A core worker -l info --logfile=/var/log/ankup-core/celery.log
+ExecStart=/opt/ankup/venv/bin/celery -A core worker -l info --logfile=/var/log/ankup/celery.log
 
 Restart=always
 RestartSec=3
