@@ -1,5 +1,5 @@
 Name:           ankup
-Version:        1.0.0
+Version:        1.0.2
 Release:        alt1
 Summary:        Django Backend + Celery (Offline Install)
 License:        Proprietary
