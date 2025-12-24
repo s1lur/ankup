@@ -62,6 +62,8 @@ a= /opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels
 
 a= /opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels -r /opt/%{name}/requirements.txt
 
+a= /opt/%{name}/venv/bin/python /opt/%{name}/manage.py collectstatic
+
 chown -R ankup_user:ankup_user /opt/%{name}
 chown -R ankup_user:ankup_user /var/log/%{name}
 chown -R ankup_user:ankup_user /var/lib/%{name}

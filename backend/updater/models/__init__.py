@@ -1,6 +1,6 @@
 from .service import (
     Service, HistoricalService,
-    ServiceServiceDependency, ServicePackageDependency
+    ServiceServiceDependency
 )
 from .package import (
     Package, HistoricalPackage,

@@ -4,13 +4,9 @@ from django.utils.html import format_html, urlencode
 from simple_history.admin import SimpleHistoryAdmin
 
 from updater.models import (
-    Service, ServicePackageDependency, ServiceServiceDependency
+    Service, ServiceServiceDependency
 )
-from .deps import DependencyInline, VersionedDependencyInline
-
-
-class ServicePackageDependencyInline(VersionedDependencyInline):
-    model = ServicePackageDependency
+from .deps import DependencyInline
 
 
 class ServiceServiceDependencyInline(DependencyInline):
@@ -21,7 +17,7 @@ class ServiceServiceDependencyInline(DependencyInline):
 class ServiceAdmin(SimpleHistoryAdmin):
     model = Service
     inlines = [
-        ServiceServiceDependencyInline, ServicePackageDependencyInline,
+        ServiceServiceDependencyInline
     ]
     list_display = [
         'id',
@@ -34,13 +30,16 @@ class ServiceAdmin(SimpleHistoryAdmin):
     list_display_links = [
         'id',
     ]
+    autocomplete_fields = [
+        'package',
+    ]
     search_fields = [
         'name',
     ]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ['name']
+            return ['name', 'package']
         return []
 
     def view_service_deps_link(self, obj):
@@ -59,13 +58,10 @@ class ServiceAdmin(SimpleHistoryAdmin):
             url, count)
     view_dependant_services_link.short_description = 'Зависимые сервисы'
 
-    def view_package_deps_link(self, obj):
-        count = obj.package_deps.count()
-        url = reverse('admin:updater_package_changelist') + '?' + urlencode({'services__id': obj.id})
-        return format_html(
-            f'<a href="{{}}"> {{}} пакет{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>',
-            url, count)
-    view_package_deps_link.short_description = 'Пакеты, от которых зависит'
+    def view_package_link(self, obj):
+        url = reverse("admin:updater_package_change", args=[obj.package_id])
+        return format_html('<a href="{}">{}</a>', url, obj.package)
+    view_package_link.short_description = 'Пакет'
 
     def view_devices_link(self, obj):
         count = obj.devices.count()

@@ -1,28 +1,30 @@
 from django.dispatch import receiver
-from django.db.models.signals import post_save
+from simple_history.signals import post_create_historical_record
 
 from updater.models import (
-    DevicePackage, DeviceService
+    HistoricalDevicePackage, HistoricalDeviceService
 )
 
 
-@receiver(post_save, sender=DevicePackage, dispatch_uid='check_device_package_change')
-def check_device_package_change(sender, instance, **kwargs):
-    last_record = instance.history.latest()
-    prev_record = last_record.prev_record
+@receiver(post_create_historical_record, sender=HistoricalDevicePackage, dispatch_uid='check_device_package_change')
+def check_device_package_change(sender, instance, history_instance, **kwargs):
+    prev_record = history_instance.prev_record
     if not prev_record:
         return
-    if last_record.diff_against(prev_record, include_fields=('parameters',)):
+    if history_instance.diff_against(prev_record, included_fields=('parameters', 'version')).changes:
+        instance.skip_history_when_saving = True
         instance.applied = False
         instance.save(update_fields=('applied',))
+        del instance.skip_history_when_saving
 
 
-@receiver(post_save, sender=DeviceService, dispatch_uid='check_device_service_change')
-def check_device_service_change(sender, instance, **kwargs):
-    last_record = instance.history.latest()
-    prev_record = last_record.prev_record
+@receiver(post_create_historical_record, sender=HistoricalDeviceService, dispatch_uid='check_device_service_change')
+def check_device_service_change(sender, instance, history_instance, **kwargs):
+    prev_record = history_instance.prev_record
     if not prev_record:
         return
-    if last_record.diff_against(prev_record, include_fields=('enabled',)):
+    if history_instance.diff_against(prev_record, included_fields=('enabled',)).changes:
+        instance.skip_history_when_saving = True
         instance.applied = False
         instance.save(update_fields=('applied',))
+        del instance.skip_history_when_saving

@@ -36,7 +36,7 @@ class PackageAdmin(SimpleHistoryAdmin):
         'view_all_versions_link',
         'view_config_templates_link',
         'view_package_deps_link',
-        'view_dependant_services_link',
+        'view_services_link',
         'view_dependant_packages_link',
     ]
     list_display_links = [
@@ -77,11 +77,11 @@ class PackageAdmin(SimpleHistoryAdmin):
         return format_html(f'<a href="{{}}"> {{}} пакет{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>', url, count)
     view_package_deps_link.short_description = 'Пакеты-зависимости'
 
-    def view_dependant_services_link(self, obj):
-        count = obj.dependant_services.count()
-        url = reverse('admin:updater_service_changelist') + '?' + urlencode({'package_deps__id': obj.id})
+    def view_services_link(self, obj):
+        count = obj.services.count()
+        url = reverse('admin:updater_service_changelist') + '?' + urlencode({'package_id': obj.id})
         return format_html(f'<a href="{{}}"> {{}} сервис{"" if count == 1 else "а" if 2 <= count <= 4 else "ов"} </a>', url, count)
-    view_dependant_services_link.short_description = 'Зависимые сервисы'
+    view_services_link.short_description = 'Сервисы'
 
     def view_dependant_packages_link(self, obj):
         count = obj.dependant_packages.count()
