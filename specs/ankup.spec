@@ -1,5 +1,5 @@
 Name:           ankup
-Version:        1.0.5
+Version:        1.0.6
 Release:        alt1
 Summary:        Django Backend + Celery (Offline Install)
 License:        Proprietary
@@ -62,7 +62,7 @@ a= /opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels
 
 a= /opt/%{name}/venv/bin/pip install --no-index --find-links=/opt/%{name}/wheels -r /opt/%{name}/requirements.txt
 
-a= /opt/%{name}/venv/bin/python /opt/%{name}/manage.py collectstatic
+a= /opt/%{name}/venv/bin/python /opt/%{name}/manage.py collectstatic --noinput
 
 chown -R ankup_user:ankup_user /opt/%{name}
 chown -R ankup_user:ankup_user /var/log/%{name}

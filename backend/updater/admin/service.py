@@ -24,7 +24,7 @@ class ServiceAdmin(SimpleHistoryAdmin):
         'name',
         'view_service_deps_link',
         'view_dependant_services_link',
-        'view_package_deps_link',
+        'view_package_link',
         'view_devices_link',
     ]
     list_display_links = [
