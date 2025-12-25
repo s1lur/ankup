@@ -151,7 +151,6 @@ REDIS = {
 CELERY_BROKER_URL = f"redis://{REDIS['USER']}:{REDIS['PASSWORD']}@{REDIS['HOST']}:{REDIS['PORT']}/{REDIS['DB_NUMBER']}"
 CELERY_RESULT_BACKEND = f"db+postgresql://{DATABASES['default']['USER']}:{DATABASES['default']['PASSWORD']}@{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}/{DATABASES['default']['NAME']}"
 
-
 CELERY_BEAT_SCHEDULE = {
     'ping-devices-every-5-min': {
         'task': 'updater.celery.device.update_devices_availability',
