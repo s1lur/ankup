@@ -29,12 +29,12 @@ def update_devices_availability():
         is_up = raw_results.get(device.name, False)
 
         if is_up:
-            device.is_online = True
+            device.is_available = True
             device.last_seen = timezone.now()
         else:
-            device.is_online = False
+            device.is_available = False
 
-        device.save(update_fields=['is_online', 'last_seen'])
+        device.save(update_fields=['is_available', 'last_seen'])
 
 
 @app.task
