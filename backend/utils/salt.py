@@ -47,7 +47,7 @@ class SaltClient:
             payload['arg'] = arg
 
         response = self.session.post(
-            f"{self.base_url}/run",
+            f"{self.base_url}",
             json=payload,
             verify=False
         )
@@ -64,7 +64,7 @@ class SaltClient:
             payload['arg'] = arg
 
         response = self.session.post(
-            f"{self.base_url}/run",
+            f"{self.base_url}",
             json=payload,
             verify=False
         )
