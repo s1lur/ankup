@@ -1,4 +1,4 @@
-Name:           demo-corrupt
+Name:           demo-corrupt-header
 Version:        1.0.0
 Release:        alt1
 Summary:        Dummy package for security demo (should be corrupted)
