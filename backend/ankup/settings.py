@@ -154,11 +154,11 @@ CELERY_RESULT_BACKEND = f"db+postgresql://{DATABASES['default']['USER']}:{DATABA
 CELERY_BEAT_SCHEDULE = {
     'ping-devices-every-5-min': {
         'task': 'updater.celery.device.update_devices_availability',
-        'schedule': 300.0,
+        'schedule': 300,
     },
     'check-devices-antivirus-updates': {
         'task': 'updater.celery.device.check_device_antivirus_updates',
-        'schedule': 60.0,
+        'schedule': 1800,
     },
 }
 
