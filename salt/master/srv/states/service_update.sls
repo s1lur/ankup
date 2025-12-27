@@ -11,21 +11,21 @@ service_{{ name }}:
     - enable: {{ data.enabled }}
 
     - require:
-      {% for pkg in data.pkg_deps %}
-      - pkg: install_{{ pkg }}
-      {% endfor %}
+      {% if data.parent_pkg %}
+      - pkg: install_{{ data.parent_pkg }}
+      {% endif %}
 
-      {% for svc in data.svc_deps %}
-      - service: service_{{ svc }}
+      {% for svc_dep in data.svc_deps %}
+      - service: service_{{ svc_dep }}
       {% endfor %}
 
     - watch:
-      {% for pkg in data.pkg_deps %}
-      - pkg: install_{{ pkg }}
-      {% endfor %}
+      {% if data.parent_pkg %}
+      - pkg: install_{{ data.parent_pkg }}
+      {% endif %}
 
-      {% for conf in data.related_configs %}
-      - file: conf_{{ conf }}
+      {% for conf_path in data.related_configs %}
+      - file: conf_{{ conf_path }}
       {% endfor %}
 
 {% endfor %}
