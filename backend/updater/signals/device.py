@@ -10,7 +10,8 @@ from updater.celery import update_devices_availability
 
 @receiver(post_save, sender=Device, dispatch_uid="device_post_save")
 def device_post_save(sender, instance, created, **kwargs):
-    update_devices_availability.delay()
+    if created:
+        update_devices_availability.delay()
 
 
 @receiver(pre_save, sender=Device)
