@@ -18,7 +18,7 @@ def schedule_update(sender, instance, created, **kwargs):
 
     transaction.on_commit(on_commit)
 
-post_save.connect(partial(schedule_update, timeout=1800), sender=PackageUpdate, dispatch_uid='schedule_package_update')
-post_save.connect(schedule_update, sender=DistUpgrade, dispatch_uid='schedule_dist_upgrade')
+post_save.connect(schedule_update, sender=PackageUpdate, dispatch_uid='schedule_package_update')
+post_save.connect(partial(schedule_update, timeout=1800), sender=DistUpgrade, dispatch_uid='schedule_dist_upgrade')
 post_save.connect(schedule_update, sender=ServiceUpdate, dispatch_uid='schedule_service_update')
 post_save.connect(schedule_update, sender=AntivirusUpdate, dispatch_uid='schedule_antivirus_update')

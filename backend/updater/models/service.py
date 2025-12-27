@@ -11,7 +11,7 @@ class Service(models.Model):
 
     name = models.CharField(max_length=250, unique=True, help_text='Название сервиса в systemd (без .service)', verbose_name='Название')
     service_deps = models.ManyToManyField('updater.Service', through='updater.ServiceServiceDependency', through_fields=('dependant', 'dependency'), related_name='dependant_services', blank=True, verbose_name='Сервисы-зависимости')
-    package = models.ForeignKey('updater.Package', on_delete=models.CASCADE, related_name='services', verbose_name='Пакет')
+    package = models.ForeignKey('updater.Package', on_delete=models.CASCADE, null=True, blank=True, related_name='services', verbose_name='Пакет')
     history = HistoricalRecords(
         verbose_name='История изменений сервиса',
         verbose_name_plural='Истории изменений сервисов'
