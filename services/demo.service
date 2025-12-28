@@ -1,0 +1,12 @@
+[Unit]
+Description=Simple Demo Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/demo-logger.sh
+StandardOutput=journal
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
