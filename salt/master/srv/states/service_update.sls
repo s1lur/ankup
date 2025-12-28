@@ -12,7 +12,7 @@ service_{{ name }}:
 
     - require:
       {% if data.parent_pkg %}
-      - pkg: install_{{ data.parent_pkg }}
+      - cmd: install_{{ data.parent_pkg }}
       {% endif %}
 
       {% for svc_dep in data.svc_deps %}
@@ -21,7 +21,7 @@ service_{{ name }}:
 
     - watch:
       {% if data.parent_pkg %}
-      - pkg: install_{{ data.parent_pkg }}
+      - cmd: install_{{ data.parent_pkg }}
       {% endif %}
 
       {% for conf_path in data.related_configs %}
