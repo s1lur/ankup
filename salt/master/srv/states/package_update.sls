@@ -16,6 +16,10 @@ conf_{{ f.path }}:
 
 {% set pkgs = salt['pillar.get']('packages', {}) %}
 
+refresh_db:
+    cmd.run:
+        - name: apt-get clean && apt-get update
+
 {% for name, data in pkgs.items() %}
 
 install_{{ name }}:
@@ -33,7 +37,7 @@ install_{{ name }}:
                 changed="true"
             fi
 
-            echo
+            echo ""
             echo "result='$res' changed='$changed' comment='$msg'"
 
             if [ "$res" == "true" ]; then exit 0; else exit 1; fi
@@ -48,10 +52,7 @@ install_{{ name }}:
             finish true "$INSTALLED_VER" "$INSTALLED_VER" "Package {{ name }} is up-to-date"
         fi
 
-        apt-get clean
-        apt-get update
-
-        APT_OUT=$(apt-get install -y -d --reinstall "{{ name }}={{ data.version }}" 2>&1)
+        APT_OUT=$(apt-get install -y --force-yes -d --reinstall "{{ name }}={{ data.version }}" 2>&1)
         if [ $? -ne 0 ]; then
             finish false "$INSTALLED_VER" "{{ data.version }}" "Download failed: $APT_OUT"
         fi
@@ -63,7 +64,7 @@ install_{{ name }}:
         fi
 
         SIG_OUT=$(rpm -K "$RPM_FILE" 2>&1)
-        if [ $? -ne 0]; then
+        if [ $? -ne 0 ]; then
              finish false "$INSTALLED_VER" "{{ data.version }}" "SECURITY ALERT: Signature BAD for $RPM_FILE"
         fi
 
@@ -74,11 +75,12 @@ install_{{ name }}:
 
         finish true "$INSTALLED_VER" "{{ data.version }}" "Updated {{ name }}"
 
-    {% if data.deps %}
     - require:
+      - cmd: refresh_db
+      {% if data.deps %}
       {% for dep in data.deps %}
       - cmd: install_{{ dep }}
       {% endfor %}
-    {% endif %}
+      {% endif %}
 
 {% endfor %}
