@@ -65,7 +65,7 @@ install_{{ name }}:
 
         SIG_OUT=$(rpm -K "$RPM_FILE" 2>&1)
         if [ $? -ne 0 ]; then
-             finish false "$INSTALLED_VER" "{{ data.version }}" "SECURITY ALERT: Signature BAD for $RPM_FILE"
+             finish false "$INSTALLED_VER" "{{ data.version }}" "SECURITY ALERT: Integrity check failed for $RPM_FILE\n$SIG_OUT"
         fi
 
         INSTALL_OUT=$(rpm -Uvh --oldpackage --replacepkgs "$RPM_FILE" 2>&1)
