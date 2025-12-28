@@ -16,50 +16,81 @@ conf_{{ f.path }}:
 
 {% set pkgs = salt['pillar.get']('packages', {}) %}
 
-{% set pkg_names = pkgs.keys() | list %}
-
-{% if pkg_names %}
-prefetch_packages:
-  cmd.run:
-    - name: apt-get install -y -d {{ pkg_names | join(' ') }}
-{% endif %}
-
 {% for name, data in pkgs.items() %}
 
-verify_signature_{{ name }}:
-  cmd.run:
-    - name: |
-        RPM_FILE=$(find /var/cache/apt/archives -name "{{ name }}-{{ data.version }}*.rpm" | head -n 1)
-        if [ -z "$RPM_FILE" ]; then
-            echo "File not found for {{ name }}, skipping check (maybe already installed?)"
-            exit 0
-        fi
-
-        echo "Verifying $RPM_FILE..."
-        rpm -K "$RPM_FILE" | grep -q "OK"
-        if [ $? -ne 0 ]; then
-            echo "SECURITY ALERT: Signature verification failed for $RPM_FILE"
-            exit 1
-        fi
-        exit 0
-    - require:
-      - cmd: prefetch_packages
-
 install_{{ name }}:
-  pkg.installed:
-    - name: {{ name }}
-    {% if data.version %}
-    - version: {{ data.version }}
-    {% endif %}
-    - refresh: False
-    - hold: False
+  cmd.run:
+    - stateful: True
+    - name: |
+        finish() {
+            local res=$1
+            local old_v=$2
+            local new_v=$3
+            local msg="$4"
 
+            echo ""
+            echo "{"
+            echo "  \"result\": $res,"
+
+            if [ "$res" == "true" ] && [ "$old_v" != "$new_v" ]; then
+                echo "  \"changed\": { \"old\": \"$old_v\", \"new\": \"$new_v\" },"
+            else
+                echo "  \"changed\": {},"
+            fi
+
+            local safe_msg=$(echo "$msg" | sed "s/\"/'/g")
+            echo "  \"comment\": \"$safe_msg\""
+            echo "}"
+
+            if [ "$res" == "true" ]; then exit 0; else exit 1; fi
+        }
+
+        INSTALLED_VER=$(rpm -q --qf "%{VERSION}-%{RELEASE}" {{ name }} 2>/dev/null)
+        if [ $? -ne 0 ]; then
+            INSTALLED_VER="absent"
+        fi
+
+        TARGET_VER="{{ data.version }}"
+
+        if [ "$INSTALLED_VER" == "$TARGET_VER" ]; then
+            finish true "$INSTALLED_VER" "$INSTALLED_VER" "Package {{ name }} is up-to-date"
+        fi
+
+        apt-get clean
+
+        PKG_REQ="{{ name }}-$TARGET_VER"
+
+        APT_OUT=$(apt-get install -y -d --reinstall "$PKG_REQ" 2>&1)
+        if [ $? -ne 0 ]; then
+            finish false "$INSTALLED_VER" "$TARGET_VER" "Download failed: $APT_OUT"
+        fi
+
+        SEARCH_MASK="{{ name }}-$TARGET_VER*.rpm"
+
+        RPM_FILE=$(find /var/cache/apt/archives (-name "{{ name }}-$TARGET_VER*.rpm" -o -name "{{ name }}_$TARGET_VER*.rpm") | head -n 1)
+
+        if [ -z "$RPM_FILE" ]; then
+            finish false "$INSTALLED_VER" "$TARGET_VER" "RPM file not found in cache after download"
+        fi
+
+
+        SIG_OUT=$(rpm -K "$RPM_FILE" 2>&1)
+        if [ $? -ne 0]; then
+             finish false "$INSTALLED_VER" "$TARGET_VER" "SECURITY ALERT: Signature BAD for $RPM_FILE"
+        fi
+
+        INSTALL_OUT=$(rpm -Uvh --oldpackage --replacepkgs "$RPM_FILE" 2>&1)
+        if [ $? -ne 0 ]; then
+            finish false "$INSTALLED_VER" "$TARGET_VER" "Install failed: $INSTALL_OUT"
+        fi
+
+        finish true "$INSTALLED_VER" "$TARGET_VER" "Updated {{ name }}"
+
+    {% if data.deps %}
     - require:
-      - cmd: verify_signature_{{ name }}
-      {% if data.deps %}
       {% for dep in data.deps %}
-      - pkg: install_{{ dep }}
+      - cmd: install_{{ dep }}
       {% endfor %}
-      {% endif %}
+    {% endif %}
 
 {% endfor %}
