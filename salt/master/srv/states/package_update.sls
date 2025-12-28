@@ -50,41 +50,37 @@ install_{{ name }}:
             INSTALLED_VER="absent"
         fi
 
-        TARGET_VER="{{ data.version }}"
-
-        if [ "$INSTALLED_VER" == "$TARGET_VER" ]; then
+        if [ "$INSTALLED_VER" == "{{ data.version }}" ]; then
             finish true "$INSTALLED_VER" "$INSTALLED_VER" "Package {{ name }} is up-to-date"
         fi
 
         apt-get clean
 
-        PKG_REQ="{{ name }}-$TARGET_VER"
-
-        APT_OUT=$(apt-get install -y -d --reinstall "$PKG_REQ" 2>&1)
+        APT_OUT=$(apt-get install -y -d --reinstall "{{ name }}={{ data.version }}" 2>&1)
         if [ $? -ne 0 ]; then
-            finish false "$INSTALLED_VER" "$TARGET_VER" "Download failed: $APT_OUT"
+            finish false "$INSTALLED_VER" "{{ data.version }}" "Download failed: $APT_OUT"
         fi
 
-        SEARCH_MASK="{{ name }}-$TARGET_VER*.rpm"
+        SEARCH_MASK="{{ name }}-{{ data.version }}*.rpm"
 
-        RPM_FILE=$(find /var/cache/apt/archives (-name "{{ name }}-$TARGET_VER*.rpm" -o -name "{{ name }}_$TARGET_VER*.rpm") | head -n 1)
+        RPM_FILE=$(find /var/cache/apt/archives (-name "{{ name }}-{{ data.version }}*.rpm" -o -name "{{ name }}_{{ data.version }}*.rpm") | head -n 1)
 
         if [ -z "$RPM_FILE" ]; then
-            finish false "$INSTALLED_VER" "$TARGET_VER" "RPM file not found in cache after download"
+            finish false "$INSTALLED_VER" "{{ data.version }}" "RPM file not found in cache after download"
         fi
 
 
         SIG_OUT=$(rpm -K "$RPM_FILE" 2>&1)
         if [ $? -ne 0]; then
-             finish false "$INSTALLED_VER" "$TARGET_VER" "SECURITY ALERT: Signature BAD for $RPM_FILE"
+             finish false "$INSTALLED_VER" "{{ data.version }}" "SECURITY ALERT: Signature BAD for $RPM_FILE"
         fi
 
         INSTALL_OUT=$(rpm -Uvh --oldpackage --replacepkgs "$RPM_FILE" 2>&1)
         if [ $? -ne 0 ]; then
-            finish false "$INSTALLED_VER" "$TARGET_VER" "Install failed: $INSTALL_OUT"
+            finish false "$INSTALLED_VER" "{{ data.version }}" "Install failed: $INSTALL_OUT"
         fi
 
-        finish true "$INSTALLED_VER" "$TARGET_VER" "Updated {{ name }}"
+        finish true "$INSTALLED_VER" "{{ data.version }}" "Updated {{ name }}"
 
     {% if data.deps %}
     - require:
