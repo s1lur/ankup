@@ -28,14 +28,13 @@ install_{{ name }}:
             local new_v=$3
             local msg="$4"
 
-            echo ""
             echo "{"
             echo "  \"result\": $res,"
 
             if [ "$res" == "true" ] && [ "$old_v" != "$new_v" ]; then
-                echo "  \"changed\": { \"old\": \"$old_v\", \"new\": \"$new_v\" },"
+                echo "  \"changed\": \"true\","
             else
-                echo "  \"changed\": {},"
+                echo "  \"changed\": \"false\","
             fi
 
             local safe_msg=$(echo "$msg" | sed "s/\"/'/g")
@@ -55,20 +54,18 @@ install_{{ name }}:
         fi
 
         apt-get clean
+        apt-get update
 
         APT_OUT=$(apt-get install -y -d --reinstall "{{ name }}={{ data.version }}" 2>&1)
         if [ $? -ne 0 ]; then
             finish false "$INSTALLED_VER" "{{ data.version }}" "Download failed: $APT_OUT"
         fi
 
-        SEARCH_MASK="{{ name }}-{{ data.version }}*.rpm"
-
-        RPM_FILE=$(find /var/cache/apt/archives (-name "{{ name }}-{{ data.version }}*.rpm" -o -name "{{ name }}_{{ data.version }}*.rpm") | head -n 1)
+        RPM_FILE=$(find /var/cache/apt/archives -name "{{ name }}-{{ data.version }}*.rpm" -o -name "{{ name }}_{{ data.version }}*.rpm" | head -n 1)
 
         if [ -z "$RPM_FILE" ]; then
             finish false "$INSTALLED_VER" "{{ data.version }}" "RPM file not found in cache after download"
         fi
-
 
         SIG_OUT=$(rpm -K "$RPM_FILE" 2>&1)
         if [ $? -ne 0]; then
