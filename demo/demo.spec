@@ -19,9 +19,9 @@ This is a test package to demonstrate digital signature verification.
 mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/lib/systemd/system
 
-install -m 755 %{SOURCE0} %{buildroot}/usr/bin/demo-logger.sh
+install -m 755 %{SOURCE0} %{buildroot}/usr/bin/demo.sh
 
-install -m 644 %{SOURCE1} %{buildroot}/lib/systemd/system/demo-logger.service
+install -m 644 %{SOURCE1} %{buildroot}/lib/systemd/system/demo.service
 
 %post
 systemctl daemon-reload

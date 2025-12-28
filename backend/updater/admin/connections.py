@@ -98,30 +98,12 @@ class DeviceServiceFormSet(BaseInlineFormSet):
             service = form.cleaned_data.get('service')
             if not service: continue
 
-            dependencies = service.package_deps_through.all().prefetch_related('versions')
-
-            for dep_link in dependencies:
-                required_pkg = dep_link.dependency
-                allowed_versions = dep_link.versions.all()
-                allowed_ver_ids = set(v.id for v in allowed_versions)
-
-                if required_pkg.id not in installed_pkg_map:
-                    form.add_error(
-                        'service',
-                        f"Сервис требует пакет '{required_pkg.name}', который не установлен."
-                    )
-                    continue
-
-                if allowed_ver_ids:
-                    installed_ver_id = installed_pkg_map[required_pkg.id]
-
-                    if installed_ver_id not in allowed_ver_ids:
-                        allowed_strs = ", ".join([str(v.number) for v in allowed_versions])
-                        form.add_error(
-                            'service',
-                            f"Сервис требует пакет '{required_pkg.name}' одной из версий: [{allowed_strs}]. "
-                            f"Проверьте установленную версию."
-                        )
+            if service.package_id not in installed_pkg_map:
+                form.add_error(
+                    'service',
+                    f"Сервис требует пакет '{service.package.name}', который не установлен."
+                )
+                continue
 
 
 @admin.register(DevicePackage)
