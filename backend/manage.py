@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 def main():
     """Run administrative tasks."""
     load_dotenv('/etc/sysconfig/ankup')
-    load_dotenv('.env')
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ankup.settings')
     try:
