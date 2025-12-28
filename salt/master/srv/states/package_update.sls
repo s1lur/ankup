@@ -26,20 +26,15 @@ install_{{ name }}:
             local res=$1
             local old_v=$2
             local new_v=$3
-            local msg="$4"
-
-            echo "{"
-            echo "  \"result\": $res,"
+            local msg=$(echo "$4" | sed "s/'/\"/g")
+            local changed="false"
 
             if [ "$res" == "true" ] && [ "$old_v" != "$new_v" ]; then
-                echo "  \"changed\": \"true\","
-            else
-                echo "  \"changed\": \"false\","
+                changed="true"
             fi
 
-            local safe_msg=$(echo "$msg" | sed "s/\"/'/g")
-            echo "  \"comment\": \"$safe_msg\""
-            echo "}"
+            echo
+            echo "result='$res' changed='$changed' comment='$msg'"
 
             if [ "$res" == "true" ]; then exit 0; else exit 1; fi
         }
