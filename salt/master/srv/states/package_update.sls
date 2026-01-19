@@ -30,7 +30,7 @@ install_{{ name }}:
             local res=$1
             local old_v=$2
             local new_v=$3
-            local msg=$(echo "$4" | sed "s/'/'\\\\''/g")
+            local msg=$(echo "$4" | tr '\n' '' | sed "s/"/\\"/g")
             local changed="false"
 
             if [ "$res" == "true" ] && [ "$old_v" != "$new_v" ]; then
@@ -38,8 +38,17 @@ install_{{ name }}:
             fi
 
             echo ""
-            echo "changed=$changed comment='$msg' old_version='$old_v' new_version='$new_v'"
-
+            cat <<EOF
+{
+  "result": $res,
+  "changed": $changed,
+  "changes": {
+      "old": "$old_v",
+      "new": "$new_v"
+  },
+  "comment": "$msg"
+}
+EOF
             if [ "$res" == "true" ]; then exit 0; else exit 1; fi
         }
 
