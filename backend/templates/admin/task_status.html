@@ -1,48 +1,104 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
-  <ul style="padding-left: 24px;">
-    <li><b>ID задачи:</b> {{ task.id }}</li>
-    <li><b>Состояние:</b> {{ task.state }}</li>
-    {% if task.state == "SUCCESS" or task.state == "FAILURE" %}
-      <li><b>Результат:</b> {{ task.result }}</li>
-    {% endif %}
+<div class="module">
+  <h2>Детали выполнения задачи</h2>
+  <ul style="padding-left: 24px; list-style: none;">
+    <li><b>ID:</b> {{ task.id }}</li>
+    <li><b>Статус:</b>
+        {% if task.state == 'SUCCESS' %}
+            <span style="color: green; font-weight: bold;">УСПЕШНО</span>
+        {% elif task.state == 'FAILURE' %}
+            <span style="color: red; font-weight: bold;">ОШИБКА</span>
+        {% else %}
+            <span style="color: orange;">{{ task.state }}</span>
+        {% endif %}
+    </li>
   </ul>
-  {% if task.state == "PENDING" or task.state == "STARTED" %}
-    <hr style="margin: 12px 0;">
-    <div>
-      <p>Задача выполняется...</p>
-      {% include "admin/components/spinner.html" %}
-      <p>(Время последнего обновления: <span id="lastUpdate"></span>)</p>
+
+  {% if task.error %}
+    <div style="margin: 20px; padding: 10px; border: 1px solid red; background: #ffeaea;">
+        <h3>Ошибка выполнения:</h3>
+        <pre>{{ task.error }}</pre>
     </div>
+  {% endif %}
+
+  {% if task.salt_output %}
+    {% for minion, steps in task.salt_output.items %}
+        <div style="margin-top: 20px;">
+            <h3 style="background: #eee; padding: 5px;">Устройство: {{ minion }}</h3>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 2px solid #ccc;">
+                        <th style="padding: 8px;">Шаг (Command)</th>
+                        <th style="padding: 8px;">Статус</th>
+                        <th style="padding: 8px;">Изменения</th>
+                        <th style="padding: 8px;">Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for step in steps %}
+                    <tr style="border-bottom: 1px solid #eee; background-color: {% if not step.status %}#ffdddd{% else %}white{% endif %};">
+                        <td style="padding: 8px;"><b>{{ step.name }}</b></td>
+                        <td style="padding: 8px;">
+                            {% if step.status %}
+                                <span style="color: green;">✔ OK</span>
+                            {% else %}
+                                <span style="color: red;">✖ Failed</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 8px;">
+                            {% if step.changes %}
+                                <pre style="font-size: 0.9em; margin: 0;">{{ step.changes }}</pre>
+                            {% else %}
+                                <span style="color: #999;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 8px;">{{ step.comment }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if task.state == "PENDING" or task.state == "STARTED" or task.state == "RETRY" %}
+    <hr style="margin: 20px 0;">
+    <div style="text-align: center;">
+      <h3>Задача выполняется...</h3>
+      <div class="spinner" style="font-size: 2em;">⏳</div>
+      <p style="color: #666;">Обновлено: <span id="lastUpdate">Checking...</span></p>
+    </div>
+
     <script>
-      let intervalId = null;
+      const taskId = "{{ task.id }}";
       const lastUpdateSpan = document.getElementById("lastUpdate");
 
-      async function fetchStatusAndUpdate() {
+      async function checkStatus() {
         try {
-          console.log("Fetching task status...");
+            const res = await fetch(window.location.href, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await res.json();
 
-          const response = await fetch(`/admin/task-status/{{ task.id }}/`, {
-            headers: { Accept: "application/json" }
-          });
-          const data = await response.json();
+            lastUpdateSpan.innerText = new Date().toLocaleTimeString();
 
-          if (data["state"] === "SUCCESS" || data["state"] === "FAILURE") {
-            if (intervalId) {
-              clearInterval(intervalId);
+            if (data.state === 'SUCCESS' || data.state === 'FAILURE') {
+                window.location.reload(); // Перезагружаем, чтобы отрендерить таблицу
+            } else {
+                setTimeout(checkStatus, 2000); // Повтор через 2 сек
             }
-            window.reload();
-          }
-
-          lastUpdateSpan.innerHTML = new Date().toLocaleTimeString();
-        } catch (error) {
-          console.error("Error fetching task status:", error);
+        } catch (e) {
+            console.error("Poll error", e);
+            setTimeout(checkStatus, 5000);
         }
       }
 
-      intervalId = setInterval(fetchStatusAndUpdate, 3000);
-      fetchStatusAndUpdate();
+      // Запуск
+      setTimeout(checkStatus, 1000);
     </script>
   {% endif %}
+</div>
 {% endblock %}

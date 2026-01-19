@@ -25,22 +25,61 @@ class CustomAdminSite(admin.AdminSite):
         ]
         return custom_urls + urls
 
+    def _parse_salt_result(self, raw_result):
+        if not raw_result:
+            return None
+
+        parsed_data = {}
+
+        for minion_id, steps in raw_result.items():
+            minion_steps = []
+
+            if isinstance(steps, str):
+                minion_steps.append({
+                    'name': 'Error',
+                    'status': False,
+                    'comment': steps,
+                    'changes': None
+                })
+            elif isinstance(steps, dict):
+                for step_id, step_data in steps.items():
+                    if step_id == 'retcode': continue
+
+                    step_info = {
+                        'name': step_data.get('name', step_id),
+                        'status': step_data.get('result', False),
+                        'comment': step_data.get('comment', ''),
+                        'changes': step_data.get('changes', {}),
+                        'duration': step_data.get('duration', 0)
+                    }
+
+                    minion_steps.append(step_info)
+
+            parsed_data[minion_id] = minion_steps
+
+        return parsed_data
+
     def admin_task_status_view(self, request, task_id):
         task = AsyncResult(task_id)
         task_data = {
             "id": task.id,
             "state": task.state,
-            "result": task.result,
         }
+
+        if task.state in ['SUCCESS', 'FAILURE']:
+            if isinstance(task.result, Exception):
+                task_data["error"] = str(task.result)
+            else:
+                task_data["salt_output"] = self._parse_salt_result(task.result)
 
         if request.headers.get("Accept", "").startswith("application/json"):
             return JsonResponse(task_data)
-
         return render(
             request,
             "admin/task_status.html",
             {
                 "title": "Состояние задачи",
                 "task": task_data,
+                "is_popup": False,
             },
         )
